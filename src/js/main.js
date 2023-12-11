@@ -22,28 +22,47 @@ const warningMessage = {
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
-  gallery.innerHTML = '';
-  page += 1;
-  const arrImgs = await searchImg(input.value, page);
+  loadMoreBtn.style.display = 'none';
+  const value = input.value.trim();
 
-  if (!arrImgs.hits.length) {
-    iziToast.show(warningMessage);
+  if (!value) {
+    iziToast.show({ ...warningMessage, message: 'Enter word for search' });
+    input.value = '';
     return;
-  } else {
-    iziToast.show({
-      message: `Hooray! We found ${arrImgs.totalHits} images.`,
-      position: 'topRight',
-      color: 'green',
-    });
   }
 
-  if (arrImgs.hits.length === PER_PAGE) {
-    loadMoreBtn.style.display = 'block';
-  } else loadMoreBtn.style.display = 'none';
+  gallery.innerHTML = '';
+  page += 1;
 
-  const markup = createMarkup(arrImgs);
-  gallery.insertAdjacentHTML('beforeend', markup);
-  simplelightbox.refresh();
+  try {
+    const arrImgs = await searchImg(value, page);
+
+    if (!arrImgs.hits.length) {
+      iziToast.show(warningMessage);
+      return;
+    } else {
+      iziToast.show({
+        message: `Hooray! We found ${arrImgs.totalHits} images.`,
+        position: 'topRight',
+        color: 'green',
+      });
+    }
+
+    if (arrImgs.hits.length === PER_PAGE) {
+      loadMoreBtn.style.display = 'block';
+    } else {
+      iziToast.show({
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight',
+        color: 'green',
+      });
+      loadMoreBtn.style.display = 'none';
+    }
+
+    const markup = createMarkup(arrImgs);
+    gallery.insertAdjacentHTML('beforeend', markup);
+    simplelightbox.refresh();
+  } catch (error) {}
 });
 
 input.addEventListener('input', () => {
@@ -52,15 +71,23 @@ input.addEventListener('input', () => {
 
 loadMoreBtn.addEventListener('click', async () => {
   page += 1;
-  const arrImgs = await searchImg(input.value, page);
+  try {
+    const arrImgs = await searchImg(input.value.trim(), page);
+    if (arrImgs.hits.length !== PER_PAGE) {
+      loadMoreBtn.style.display = 'none';
+      iziToast.show({
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight',
+        color: 'green',
+      });
+    }
 
-  if (arrImgs.hits.length !== PER_PAGE) {
-    loadMoreBtn.style.display = 'none';
+    const markup = createMarkup(arrImgs);
+    gallery.insertAdjacentHTML('beforeend', markup);
+    simplelightbox.refresh();
+  } catch (error) {
+    console.log(error);
   }
-
-  const markup = createMarkup(arrImgs);
-  gallery.insertAdjacentHTML('beforeend', markup);
-  simplelightbox.refresh();
 });
 
 function createMarkup(arrImgs) {

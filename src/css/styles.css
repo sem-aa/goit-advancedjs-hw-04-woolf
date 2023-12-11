@@ -88,9 +88,9 @@ a {
   font-size: 14px;
 }
 
-/* Style the load more button */
+
 .load-more {
-  display: block;
+  display: none;
   margin: 20px auto;
   padding: 10px 20px;
   font-size: 16px;
